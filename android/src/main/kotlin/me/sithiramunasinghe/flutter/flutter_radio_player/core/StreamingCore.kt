@@ -68,7 +68,15 @@ class StreamingCore : Service(), AudioManager.OnAudioFocusChangeListener {
      */
 
     fun play() {
-        logger.info("playing audio $player ...")
+//        logger.info("playing audio $player ...")
+//        player?.playWhenReady = true
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            audioManager!!.requestAudioFocus(focusRequest!!)
+//        } else {
+//            audioManager!!.requestAudioFocus(afChangeListener, AudioEffect.CONTENT_TYPE_MUSIC, 0);
+//        }
+        player?.stop()
+        player?.prepare()
         player?.playWhenReady = true
     }
 
@@ -104,11 +112,11 @@ class StreamingCore : Service(), AudioManager.OnAudioFocusChangeListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        logger.info("Firing up service. (onStartCommand)...")
+        //logger.info("Firing up service. (onStartCommand)...")
 
         localBroadcastManager = LocalBroadcastManager.getInstance(context)
 
-        logger.info("LocalBroadCastManager Received...")
+        //logger.info("LocalBroadCastManager Received...")
 
         // get details
         val appName = intent!!.getStringExtra("appName")
@@ -157,11 +165,11 @@ class StreamingCore : Service(), AudioManager.OnAudioFocusChangeListener {
             it.prepare(audioSource)
         }
 
-        // register our meta data listener
-        player?.addMetadataOutput {
-            val metaData = it.get(0).toString()
-            localBroadcastManager.sendBroadcast(broadcastMetaDataIntent.putExtra("meta_data", metaData))
-        }
+//        // register our meta data listener
+//        player?.addMetadataOutput {
+//            val metaData = it.get(0).toString()
+//            localBroadcastManager.sendBroadcast(broadcastMetaDataIntent.putExtra("meta_data", metaData))
+//        }
 
         val playerNotificationManager = PlayerNotificationManager.createWithNotificationChannel(
                 context,
@@ -191,18 +199,18 @@ class StreamingCore : Service(), AudioManager.OnAudioFocusChangeListener {
                 },
                 object : PlayerNotificationManager.NotificationListener {
                     override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
-                        logger.info("Notification Cancelled. Stopping player...")
+                        //logger.info("Notification Cancelled. Stopping player...")
                         stop()
                     }
 
                     override fun onNotificationPosted(notificationId: Int, notification: Notification, ongoing: Boolean) {
-                        logger.info("Attaching player as a foreground notification...")
+                        //logger.info("Attaching player as a foreground notification...")
                         startForeground(notificationId, notification)
                     }
                 }
         )
 
-        logger.info("Building Media Session and Player Notification.")
+        //logger.info("Building Media Session and Player Notification.")
 
         val mediaSession = MediaSessionCompat(context, mediaSessionId)
         mediaSession.isActive = true
@@ -210,6 +218,11 @@ class StreamingCore : Service(), AudioManager.OnAudioFocusChangeListener {
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector?.setPlayer(player)
 
+        val dispatcher = CustomControlDispatcher()
+        dispatcher.fastForwardIncrementMs = 0
+        dispatcher.rewindIncrementMs = 0
+
+        playerNotificationManager.setControlDispatcher(dispatcher)
         playerNotificationManager.setUseStopAction(true)
         playerNotificationManager.setFastForwardIncrementMs(0)
         playerNotificationManager.setRewindIncrementMs(0)

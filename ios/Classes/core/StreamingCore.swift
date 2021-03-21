@@ -17,12 +17,15 @@ class StreamingCore : NSObject, AVPlayerItemMetadataOutputPushDelegate {
     private var commandCenter: MPRemoteCommandCenter?
     private var playWhenReady: Bool = false
     
+    private var streamUrl:String = ""
+    
     override init() {
         print("StreamingCore Initializing...")
     }
     
     func initService(streamURL: String, serviceName: String, secondTitle: String, playWhenReady: String) -> Void {
-        
+        self.streamUrl = streamURL
+
         print("Initialing Service...")
         
         print("Stream url: " + streamURL)
@@ -34,9 +37,9 @@ class StreamingCore : NSObject, AVPlayerItemMetadataOutputPushDelegate {
         avPlayer = AVPlayer(playerItem: avPlayerItem!)
         
         //Listener for metadata from streaming
-        let metadataOutput = AVPlayerItemMetadataOutput(identifiers: nil)
-        metadataOutput.setDelegate(self, queue: DispatchQueue.main)
-        avPlayerItem?.add(metadataOutput)
+//        let metadataOutput = AVPlayerItemMetadataOutput(identifiers: nil)
+//        metadataOutput.setDelegate(self, queue: DispatchQueue.main)
+//        avPlayerItem?.add(metadataOutput)
         
         if playWhenReady == "true" {
             print("PlayWhenReady: true")
@@ -48,6 +51,10 @@ class StreamingCore : NSObject, AVPlayerItemMetadataOutputPushDelegate {
         
         // init Remote protocols.
         initRemoteTransportControl(appName: serviceName, subTitle: secondTitle);
+        
+        if #available(iOS 10.0, *) {
+                    avPlayerItem?.preferredForwardBufferDuration = 5
+                }
     }
     
     func metadataOutput(_ output: AVPlayerItemMetadataOutput, didOutputTimedMetadataGroups groups: [AVTimedMetadataGroup], from track: AVPlayerItemTrack?) {
@@ -62,11 +69,14 @@ class StreamingCore : NSObject, AVPlayerItemMetadataOutputPushDelegate {
     
     func play() -> PlayerStatus {
         print("invoking play method on service")
-        if(!isPlaying()) {
-            avPlayer?.play()
-            pushEvent(eventName: Constants.FLUTTER_RADIO_PLAYING)
-        }
-        
+//        if(!isPlaying()) {
+//            avPlayer?.play()
+//            pushEvent(eventName: Constants.FLUTTER_RADIO_PLAYING)
+//        }
+        let streamURLInstance = URL(string: streamUrl)
+        playWhenReady = true
+        avPlayer?.replaceCurrentItem(with: AVPlayerItem(url: streamURLInstance!))
+        avPlayer?.play()
         return PlayerStatus.PLAYING
     }
     
@@ -105,6 +115,7 @@ class StreamingCore : NSObject, AVPlayerItemMetadataOutputPushDelegate {
     }
     
     func setUrl(streamURL: String, playWhenReady: String) -> Void {
+        self.streamUrl = streamURL
         let streamURLInstance = URL(string: streamURL)
         avPlayer?.replaceCurrentItem(with: AVPlayerItem(url: streamURLInstance!))
         

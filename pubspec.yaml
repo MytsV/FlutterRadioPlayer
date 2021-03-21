@@ -4,6 +4,8 @@ version: 1.0.6
 author: Sithira Munasinghe <sithiraac@gmail.com>
 homepage: https://github.com/Sithira/FlutterRadioPlayer
 
+publish_to: 'none'
+
 environment:
   sdk: ">=2.1.0 <3.0.0"
 

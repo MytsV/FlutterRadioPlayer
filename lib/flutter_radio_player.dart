@@ -22,6 +22,8 @@ class FlutterRadioPlayer {
   static Stream<String> _isPlayingStream;
   static Stream<String> _metaDataStream;
 
+  static String _myStatus;
+
   Future<void> init(String appName, String subTitle, String streamURL,
       String playWhenReady) async {
     return await _channel.invokeMethod("initService", {
@@ -65,11 +67,23 @@ class FlutterRadioPlayer {
     });
   }
 
+  String get myStatus {
+    if (_myStatus == null) return flutter_radio_paused;
+    else  return _myStatus;
+  }
+
+  set _setStatus(String status) {
+    _myStatus = status;
+  }
+
   /// Get the player stream.
   Stream<String> get isPlayingStream {
     if (_isPlayingStream == null) {
       _isPlayingStream =
           _eventChannel.receiveBroadcastStream().map<String>((value) => value);
+      _isPlayingStream.listen((event) {
+        _setStatus = event;
+      });
     }
     return _isPlayingStream;
   }
